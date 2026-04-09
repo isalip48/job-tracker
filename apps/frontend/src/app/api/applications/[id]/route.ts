@@ -19,7 +19,7 @@ async function getOwnedApplication(id: string, userId: string) {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -42,7 +42,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -58,8 +58,11 @@ export async function PUT(
   const parsed = updateApplicationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Validation failed", issues: parsed.error.flatten().fieldErrors },
-      { status: 422 }
+      {
+        error: "Validation failed",
+        issues: parsed.error.flatten().fieldErrors,
+      },
+      { status: 422 },
     );
   }
 
@@ -67,9 +70,11 @@ export async function PUT(
     where: { id: params.id },
     data: {
       ...parsed.data,
-      ...(parsed.data.appliedDate
-        ? { appliedDate: new Date(parsed.data.appliedDate) }
-        : {}),
+      // Ensure we only try to construct a Date if the string actually exists
+      appliedDate:
+        typeof parsed.data.appliedDate === "string"
+          ? new Date(parsed.data.appliedDate)
+          : undefined,
     },
   });
 
@@ -82,7 +87,7 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
