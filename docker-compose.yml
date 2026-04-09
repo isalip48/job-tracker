@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: job_tracker_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: job_tracker
+    ports:
+      - "5432:5432"         # accessible on localhost:5432 for Prisma Studio
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: job_tracker_redis
+    ports:
+      - "6379:6379"         # accessible on localhost:6379
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+
+# ---------------------------------------------------------------
+# Usage:
+#   docker compose up -d        ← start Postgres + Redis
+#   docker compose down         ← stop (data is preserved in volumes)
+#   docker compose down -v      ← stop AND wipe all data
+# ---------------------------------------------------------------
