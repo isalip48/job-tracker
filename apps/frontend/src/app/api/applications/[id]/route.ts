@@ -19,15 +19,16 @@ async function getOwnedApplication(id: string, userId: string) {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const application = await prisma.application.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
     include: { contacts: true, reminders: true },
   });
 
@@ -42,14 +43,15 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const existing = await getOwnedApplication(params.id, session.user.id);
+  const existing = await getOwnedApplication(id, session.user.id);
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -67,7 +69,7 @@ export async function PUT(
   }
 
   const updated = await prisma.application.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...parsed.data,
       // Ensure we only try to construct a Date if the string actually exists
@@ -87,19 +89,20 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const existing = await getOwnedApplication(params.id, session.user.id);
+  const existing = await getOwnedApplication(id, session.user.id);
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await prisma.application.delete({ where: { id: params.id } });
+  await prisma.application.delete({ where: { id } });
   await invalidate(`stats:${session.user.id}`);
 
   return new NextResponse(null, { status: 204 });
