@@ -1,16 +1,16 @@
 {
-  "name": "job-tracker",
-  "version": "1.0.0",
+  "name": "job-tracker-root",
   "private": true,
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "workspaces": [
     "apps/*"
   ],
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "scripts": {
+  "dev:frontend": "npm run dev -w @job-tracker/frontend",
+  "dev:backend": "npm run dev -w @job-tracker/backend",
+  "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+  "db:generate": "npm run db:generate -w @job-tracker/frontend"
+},
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }
